@@ -1,0 +1,59 @@
+# Desc: Configuration file for the Nano Editor
+# Auth: Nicklas Vraa
+
+include "/usr/share/nano/*.nanorc"
+
+# Looks
+set linenumbers
+set titlecolor white,black
+set numbercolor white,black
+set statuscolor white,black
+set keycolor white,black
+
+# Behaviour
+set autoindent
+set mouse
+set softwrap
+set atblanks
+set tabsize 4
+set tabstospaces
+set historylog
+
+# Change keybindings to standardized configuration
+bind ^Q exit all
+bind ^S savefile main
+bind ^C copy main
+bind ^X cut main
+bind ^V paste main
+bind ^Z undo main
+bind ^Y redo main
+bind ^F whereis main
+bind ^R replace main
+bind ^N gotoline main
+bind ^T mark main
+
+# Remove keybindings to clean up help-lines
+unbind ^G main
+unbind ^O main
+unbind ^W main
+unbind ^B main
+unbind ^W main
+unbind ^P main
+unbind ^J main
+unbind M-A main
+unbind M-] main
+unbind M-Q main
+unbind M-W main
+unbind F1 main
+unbind F2 main
+unbind F3 main
+unbind F4 main
+unbind F5 main
+unbind F6 main
+unbind F7 main
+unbind F8 main
+unbind F9 main
+unbind F10 main
+unbind F11 main
+unbind F12 main
+unbind Ins main
