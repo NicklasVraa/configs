@@ -13,7 +13,6 @@ set keycolor white,black
 # Behaviour
 set autoindent
 set mouse
-set softwrap
 set atblanks
 set tabsize 4
 set tabstospaces

@@ -68,6 +68,14 @@ if [ -f "$HOME/.bash_clipboard" ]; then
     . "$HOME/.bash_clipboard"
 fi
 
+# KEYBINDS: --------------------------------------------------------------------
+
+# Remappings to allow for ctrl-c copying, ctrl-v pasting, and ctrl-q interrupt.
+# To see current mappings, run: stty -a
+stty lnext ^l
+stty start ^p
+stty intr ^q
+
 # ALIASES: ---------------------------------------------------------------------
 
 # General convenience.
@@ -78,6 +86,7 @@ alias update='sudo apt update && sudo apt upgrade'
 alias fetch='neofetch'
 alias space='du -sh ~/* | sed "s/\/home\/$USER\///"'
 alias python3='python3.10'
+alias edit='nano'
 
 # Maintenance.
 alias kernels="sudo dpkg --list | egrep 'linux-image|linux-headers|linux-modules'"
