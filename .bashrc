@@ -26,9 +26,9 @@ esac
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	color_prompt=yes
+	    color_prompt=yes
     else
-	color_prompt=
+	    color_prompt=
     fi
 fi
 
@@ -72,39 +72,37 @@ fi
 
 # Remappings to allow for ctrl-c copying, ctrl-v pasting, and ctrl-q interrupt.
 # To see current mappings, run: stty -a
-stty lnext ^l
-stty start ^p
-stty intr ^q
+stty lnext ^l; stty start ^p; stty intr ^q
 
 # ALIASES: ---------------------------------------------------------------------
 
 # General convenience.
 alias ll='ls -l'
 alias cl='clear'
+alias edrc='code ~/.bashrc'
 alias rlrc='echo "Reloading bashrc"; source ~/.bashrc'
 alias update='sudo apt update && sudo apt upgrade'
 alias fetch='neofetch'
 alias space='du -sh ~/* | sed "s/\/home\/$USER\///"'
 alias python3='python3.10'
-alias edit='nano'
+alias python='python3'
 
 # Maintenance.
 alias kernels="sudo dpkg --list | egrep 'linux-image|linux-headers|linux-modules'"
-
-# Edit configs.
-alias edrc='code ~/.bashrc'
-alias edvs='code ~/.vscode/vscode.css'
-alias edte='code ~/.config/terminator/config'
-alias ednf='code ~/.config/neofetch/config.conf'
-alias edoo='code ~/.config/onlyoffice/DesktopEditors.conf'
-alias edff='code ~/.mozilla/firefox/tskxltgb.default-release/chrome/userChrome.css'
-alias edob='code /opt/nova/theme/Nova-galactic/obsidian/.obsidian/snippets/custom.css'
-alias edsc='code /home/nv/.local/share/nemo/scripts'
 
 # Launchers
 alias retroarch='/opt/retroarch.AppImage'
 
 # FUNCTIONS: -------------------------------------------------------------------
+
+# Activate virtual environments.
+activate() {
+    if [ $# -eq 0 ]; then
+        echo "No environemt name provided."
+    else
+        source ~/.venv/$1/bin/activate
+    fi
+}
 
 # Remove clutter.
 clean() {
@@ -130,7 +128,7 @@ clean() {
     rm -f ~/.xsession-errors.old
 
     echo "Deleting coredumps"
-    systemd-tmpfiles --clean
+    sudo systemd-tmpfiles --clean
     sudo rm -rf /var/lib/systemd/coredump/*
 
     echo "Resetting command history"
@@ -148,11 +146,6 @@ clean() {
     trash-empty # Empties trash folders on all drives.
 
     echo "Finished"
-}
-
-# Reset Rhythmbox library paths.
-rhythmbox_path_reset() {
-    gsettings set org.gnome.rhythmbox.rhythmdb locations "['file:///dev/null']"
 }
 
 # Cut or convert video.
@@ -175,15 +168,6 @@ video() {
     fi
 }
 
-# Activate Python virtual environments.
-activate() {
-    if [ $# -eq 0 ]; then
-        echo "No environemt name provided."
-    else
-        source ~/.venv/$1/bin/activate
-    fi
-}
-
 # Tex Live Package Manager shortcuts.
 lpm() {
     if [ $# -eq 0 ]; then
@@ -197,55 +181,6 @@ lpm() {
     fi
 }
 
-# Toggle monitor on or off.
-toggle_monitor() {
-    TOGGLE=$HOME/.monitor
-
-    if [ ! -e $TOGGLE ]; then
-        touch $TOGGLE
-        xrandr --output DP-0 --mode 1920x1080 --rate 144.00
-    else
-        rm $TOGGLE
-        xrandr --output DP-0 --off
-    fi
-}
-
-# Toggle between PC and PC+TV. The TV is given sound.
-toggle_tv() {
-    TOGGLE=$HOME/.tv
-
-    if [ ! -e $TOGGLE ]; then
-        touch $TOGGLE
-        echo "Turning on TV. Redirecting sound."
-
-        # Move all running audio outputs to TV.
-        OUTPUT="alsa_output.pci-0000_01_00.1.hdmi-stereo"
-        pactl list short sink-inputs|while read stream; do
-            id=$(echo $stream|cut '-d ' -f1)
-            pactl move-sink-input "$id" "$OUTPUT"
-        done
-
-        pactl set-default-sink "$OUTPUT" # Set default audio output to TV.
-
-        # Video.
-        xrandr --output HDMI-0 --right-of DP-0 --mode 1920x1080 --rate 60.00
-    else
-        rm $TOGGLE
-        echo "Turning off TV."
-
-        # Move all running audio outputs to headphone jack.
-        OUTPUT="alsa_output.pci-0000_00_1b.0.analog-stereo"
-        pactl list short sink-inputs|while read stream; do
-            id=$(echo $stream|cut '-d ' -f1)
-            pactl move-sink-input "$id" "$OUTPUT"
-        done
-
-        pactl set-default-sink "$OUTPUT" # Set default audio output headphones.
-
-        xrandr --output HDMI-0 --off # Video.
-    fi
-}
-
 # Download track, playlist, album, etc. from a spotify url.
 spotdl() {
     cd /media/nv/Storage/Music || cd ~/Downloads
@@ -255,7 +190,8 @@ spotdl() {
     cd
 }
 
-sync_configs() {
+# Copy config files to a version-controlled directory.
+configs-sync() {
     sudo cp ~/.bashrc /opt/nova/configs/.bashrc
     sudo cp /etc/nanorc /opt/nova/configs/.nanorc
     sudo cp ~/.config/neofetch/config.conf /opt/nova/configs/neofetch/config.conf
@@ -263,22 +199,7 @@ sync_configs() {
     sudo cp ~/.config/gtk-3.0/gtk.css /opt/nova/configs/gtk.css
 }
 
-# Matlab Docker container operations.
-# matlab() {
-#    if [ $# -eq 0 ]; then
-#        echo "No arguments provided"
-#    elif [ $1 = "run" ]; then
-#        docker run -it --rm\
-#        -e DISPLAY=$DISPLAY \
-#        -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-#        -v /home/nv/Projects:/home/matlab/Documents/MATLAB/Projects \
-#        -v /home/nv/Studies:/home/matlab/Documents/MATLAB/Studies \
-#        --shm-size=1024M mathworks/matlab:r2022b;
-#    elif [ $1 = "save" ]; then
-#        sudo docker commit $(sudo docker ps -lq) mathworks/matlab:r2022b
-#    elif [ $1 = "install" ]; then
-#        sudo docker pull mathworks/matlab:r2022b
-#    else
-#        echo "Invalid argument."
-#    fi
-# }
+# Reset Rhythmbox library paths.
+rhythmbox-reset() {
+    gsettings set org.gnome.rhythmbox.rhythmdb locations "['file:///dev/null']"
+}
