@@ -13,6 +13,7 @@ HISTSIZE=1000
 HISTFILESIZE=2000
 shopt -s histappend
 shopt -s checkwinsize
+shopt -s extglob
 
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
@@ -84,16 +85,22 @@ alias rlrc='echo "Reloading bashrc"; source ~/.bashrc'
 alias update='sudo apt update && sudo apt upgrade'
 alias fetch='neofetch'
 alias space='du -sh ~/* | sed "s/\/home\/$USER\///"'
-alias python3='python3.10'
 alias python='python3'
 
 # Maintenance.
 alias kernels="sudo dpkg --list | egrep 'linux-image|linux-headers|linux-modules'"
+alias brokelinks="find . -xtype l"
 
 # Launchers
 alias retroarch='/opt/retroarch.AppImage'
 
 # FUNCTIONS: -------------------------------------------------------------------
+
+# Convert number of characters to words and pages.
+char2page() {
+    local page_count=$(($1 / 1700))
+    echo "Estimated pages: $page_count"
+}
 
 # Activate virtual environments.
 activate() {
@@ -120,10 +127,13 @@ clean() {
     sudo rm -f /var/log/lightdm/*.log.*.gz
 
     echo "Purging firefox clutter"
-    rm -rf "~/.mozilla/firefox/Crash Reports/pending"
+    rm -rf ~/.mozilla/firefox/Crash\ Reports/*
     rm -rf ~/.mozilla/firefox/*.default-release/bookmarkbackups
     rm -rf ~/.mozilla/firefox/*.default-release/datareporting/archived
     rm -rf ~/.mozilla/firefox/tskxltgb.default-release/weave/logs
+    rm -rf ~/.mozilla/firefox/tskxltgb.default-release/storage/default/http* # Offline data cache.
+
+    echo "Resetting xsession logs"
     >~/.xsession-errors
     rm -f ~/.xsession-errors.old
 
@@ -137,7 +147,7 @@ clean() {
     cat /dev/null > ~/.python_history
 
     echo "Clearing caches"
-    rm -rf ~/.cache/* # Clear home folder cache.
+    rm -rf ~/.cache/mozilla # Clear home folder cache.
     rm -rf ~/.config/Code/Cache/Cache_Data/* # Clear VSCode cache.
     rm -rf ~/.config/Code/CachedData/*
     rm -rf ~/.config/obsidian/Cache_Data/* # Clear Obsidian cache.
@@ -182,12 +192,17 @@ lpm() {
 }
 
 # Download track, playlist, album, etc. from a spotify url.
-spotdl() {
-    cd /media/nv/Storage/Music || cd ~/Downloads
-    sudo docker run --rm -v $(pwd):/music spotdl/spotify-downloader download $1
-    cd '/media/nv/Storage/'
-    sudo chown -R nv:nv Music
-    cd
+dl() {
+    if [ $# -eq 0 ]; then
+        echo "No link provided."
+    else
+        echo "Attempting to download music..."
+        cd /media/nv/Storage/Music/
+        activate spotdl
+        spotdl $1
+        deactivate
+        cd
+    fi
 }
 
 # Copy config files to a version-controlled directory.
@@ -202,4 +217,19 @@ configs-sync() {
 # Reset Rhythmbox library paths.
 rhythmbox-reset() {
     gsettings set org.gnome.rhythmbox.rhythmdb locations "['file:///dev/null']"
+}
+
+# Purge unwanted fonts.
+purge-fonts() {
+    echo "Purging highly specialized fonts..."
+    sudo apt purge fonts-beng fonts-beng-extra fonts-deva fonts-deva-extra fonts-gargi fonts-gubbi fonts-gujr fonts-gujr-extra fonts-guru fonts-guru-extra fonts-indic fonts-kalapi fonts-khmeros-core fonts-knda fonts-lao fonts-lklug-sinhala fonts-lohit-* fonts-mlym fonts-nakula fonts-navilu fonts-orya fonts-orya-extra fonts-pagul fonts-sahadeva fonts-samyak-* fonts-sarai fonts-sil-* fonts-smc fonts-smc-* fonts-taml fonts-telu fonts-telu-extra fonts-thai-tlwg fonts-tibetan-machine fonts-tlwg-* fonts-wqy-microhei fonts-noto-cjk fonts-takao-pgothic fonts-tibetan-machine  ttf-ancient-fonts-symbola
+
+    echo "Removing corresponding folders..."
+    cd /usr/share/fonts/truetype
+    sudo rm -rf abyssinica crosextra fonts-beng-extra fonts-deva-extra fonts-gujr-extra fonts-guru-extra fonts-kalapi fonts-orya-extra fonts-telu-extra Gargi Gubbi kacst kacst-one lao lohit-* malayalam Nakula Navilu padauk pagul Sahadeva samyak samyak-fonts Sarai sinhala tibetan-machine tlwg ttf-khmeros-core
+
+    cd
+    echo Recreating the font cache...
+    sudo fc-cache -r
+    sudo fc-cache -fv
 }
